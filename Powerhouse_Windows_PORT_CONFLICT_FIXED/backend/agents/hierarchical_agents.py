@@ -1,1 +1,0 @@
-class Agent:\n    def run(self, context):\n        return \"hierarchical_agents processed: \" + context.get('task','')\n
