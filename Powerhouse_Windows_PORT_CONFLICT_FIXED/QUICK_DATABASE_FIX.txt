@@ -1,0 +1,82 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║   POWERHOUSE - FIX FOR LOGIN ERROR (QUICK REFERENCE)         ║
+╚══════════════════════════════════════════════════════════════╝
+
+ERROR YOU'RE SEEING:
+--------------------
+"@prisma/client did not initialize yet. Please run 'prisma generate'"
+
+THE FIX (4 EASY STEPS):
+-----------------------
+
+1. DOWNLOAD NEW PACKAGE
+   File: Powerhouse_Windows_DATABASE_FIXED.zip
+   Extract to: C:\Powerhouse (or any folder)
+
+2. INSTALL DEPENDENCIES
+   Double-click: INSTALL.bat
+   Wait: 10-15 minutes
+   Result: "INSTALLATION COMPLETE!"
+
+3. INSTALL POSTGRESQL
+   Double-click: DATABASE_SETUP_WINDOWS.bat
+   Follow: On-screen instructions
+   Download: PostgreSQL from the link shown
+   Password: Use "default"
+   Time: 5-10 minutes
+   
+   After PostgreSQL installs:
+   Double-click: SETUP_DATABASE.bat
+   Wait: "DATABASE SETUP COMPLETE!"
+
+4. START POWERHOUSE
+   Double-click: START.bat
+   Login: test@test.com / test123
+   Done: All 19 agents working!
+
+═══════════════════════════════════════════════════════════════
+
+WHY THIS ERROR HAPPENED:
+------------------------
+Powerhouse needs PostgreSQL database for login and data storage.
+You need to install it once. After that, it runs automatically.
+
+═══════════════════════════════════════════════════════════════
+
+NEED HELP?
+----------
+See these files in your package:
+- README_WINDOWS.txt (detailed guide)
+- WINDOWS_DATABASE_GUIDE.txt (database help)
+- DATABASE_FIX_SUMMARY.pdf (this fix explained)
+
+═══════════════════════════════════════════════════════════════
+
+VERIFICATION:
+-------------
+After Step 3, check PostgreSQL is running:
+  1. Press Windows + R
+  2. Type: services.msc
+  3. Look for: postgresql-x64-15
+  4. Status should show: Running
+
+═══════════════════════════════════════════════════════════════
+
+QUICK LINKS:
+------------
+PostgreSQL Download:
+https://www.postgresql.org/download/windows/
+
+Download the installer (postgresql-15.x-windows-x64.exe)
+
+═══════════════════════════════════════════════════════════════
+
+DAILY USE (AFTER SETUP):
+------------------------
+Just double-click: START.bat
+Login and use Powerhouse!
+
+No need to touch PostgreSQL again.
+
+═══════════════════════════════════════════════════════════════

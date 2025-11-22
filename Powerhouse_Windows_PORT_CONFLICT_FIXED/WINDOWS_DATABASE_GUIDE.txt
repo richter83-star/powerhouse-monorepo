@@ -1,0 +1,137 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║     POWERHOUSE - WINDOWS DATABASE SETUP GUIDE                ║
+╚══════════════════════════════════════════════════════════════╝
+
+ERROR YOU'RE SEEING:
+--------------------
+"@prisma/client did not initialize yet. Please run 'prisma generate'"
+
+WHY THIS HAPPENS:
+-----------------
+Powerhouse uses PostgreSQL database for:
+- User authentication (login/signup)
+- Workflow storage
+- Agent results
+- Settings and preferences
+
+SOLUTION - FOLLOW THESE STEPS:
+-------------------------------
+
+STEP 1: Install PostgreSQL
+---------------------------
+1. Download PostgreSQL 15 from:
+   https://www.postgresql.org/download/windows/
+
+2. Run the installer (postgresql-15.x-x-windows-x64.exe)
+
+3. During installation:
+   ✓ Set password: "default" (or remember your own)
+   ✓ Port: 5432 (default)
+   ✓ Locale: Default locale
+   ✓ Install pgAdmin 4 (optional, but helpful)
+
+4. Installation takes 5-10 minutes
+
+5. After installation, PostgreSQL runs automatically as a Windows service
+
+
+STEP 2: Verify PostgreSQL is Running
+-------------------------------------
+1. Press Windows + R
+2. Type: services.msc
+3. Press Enter
+4. Look for "postgresql-x64-15" in the list
+5. Status should show "Running"
+
+OR:
+
+1. Open Command Prompt
+2. Run: netstat -an | find ":5432"
+3. You should see a line with ":5432"
+
+
+STEP 3: Configure Database Connection
+--------------------------------------
+The database settings are already configured in:
+  frontend\app\.env
+
+Default settings:
+  DATABASE_URL="postgresql://default:default@localhost:5432/powerhouse?schema=public"
+
+If you used a different password during installation, edit .env:
+  DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/powerhouse?schema=public"
+
+
+STEP 4: Run Database Setup
+---------------------------
+1. Double-click: SETUP_DATABASE.bat
+2. Wait for it to complete
+3. You should see: "DATABASE SETUP COMPLETE!"
+
+
+STEP 5: Start Powerhouse
+-------------------------
+1. Double-click: START.bat
+2. Platform will open in your browser
+3. You can now login and use all features!
+
+
+TROUBLESHOOTING:
+----------------
+
+Problem: "PostgreSQL is not running on port 5432"
+Solution: 
+  - Open Services (services.msc)
+  - Find "postgresql-x64-15"
+  - Right-click → Start
+  - Try SETUP_DATABASE.bat again
+
+Problem: "Failed to create database tables"
+Solution:
+  - Check your password in .env file
+  - Make sure "powerhouse" database exists
+  - Open pgAdmin 4, create database "powerhouse" if needed
+
+Problem: "Connection refused"
+Solution:
+  - PostgreSQL might not be installed
+  - Run DATABASE_SETUP_WINDOWS.bat first
+  - Follow STEP 1 above
+
+Problem: "Port 5432 already in use"
+Solution:
+  - Another database is using this port
+  - Either stop it, or change port in .env
+  - Contact support if you need help
+
+
+ALTERNATIVE: Docker Method (Advanced Users)
+--------------------------------------------
+If you have Docker Desktop:
+
+1. Open PowerShell as Administrator
+2. Run:
+   docker run --name powerhouse-db -e POSTGRES_PASSWORD=default -e POSTGRES_USER=default -e POSTGRES_DB=powerhouse -p 5432:5432 -d postgres:15
+
+3. Run: SETUP_DATABASE.bat
+4. Run: START.bat
+
+
+NEED HELP?
+----------
+If you're still having issues:
+1. Check PostgreSQL is installed and running
+2. Check the password in .env matches your PostgreSQL password
+3. Try restarting your computer
+4. Contact support with the exact error message
+
+
+NOTES:
+------
+- PostgreSQL only needs to be installed ONCE
+- It will run automatically after installation
+- Database setup (SETUP_DATABASE.bat) only needs to run ONCE
+- After that, just use START.bat to launch Powerhouse
+
+═══════════════════════════════════════════════════════════════

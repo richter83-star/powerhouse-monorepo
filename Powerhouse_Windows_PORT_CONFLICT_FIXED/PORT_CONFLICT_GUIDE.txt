@@ -1,0 +1,358 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║     PORT 5432 CONFLICT - COMPLETE SOLUTION GUIDE             ║
+╚══════════════════════════════════════════════════════════════╝
+
+PROBLEM:
+--------
+Port 5432 (PostgreSQL default port) is already in use on your system.
+
+This happens when:
+- Another PostgreSQL is already installed
+- Another database (MySQL, MongoDB) is using that port
+- Some other service is using port 5432
+
+═══════════════════════════════════════════════════════════════
+
+QUICK SOLUTION (3 STEPS):
+--------------------------
+
+1. CHECK WHAT'S USING THE PORT
+   Double-click: CHECK_PORT_5432.bat
+   This will show you what's using port 5432
+
+2. CHOOSE YOUR SOLUTION
+   Pick the best option for your situation:
+   
+   Option A: Use Different Port (EASIEST)
+   Option B: Use Existing PostgreSQL
+   Option C: Stop/Remove Conflicting Service
+
+3. FOLLOW THE SCRIPTS
+   Each solution has its own automated script below
+
+═══════════════════════════════════════════════════════════════
+
+OPTION A: USE DIFFERENT PORT (RECOMMENDED)
+-------------------------------------------
+
+Best if: You need both databases, or don't want to change anything
+
+Steps:
+
+1. Double-click: PORT_5432_CONFLICT_FIX.bat
+   OR
+   Double-click: CUSTOM_PORT_SETUP.bat (to choose your own port)
+
+2. Follow the prompts
+
+3. When installing PostgreSQL, use the port shown (e.g., 5433)
+
+4. Configuration will be updated automatically
+
+5. Run: SETUP_DATABASE.bat
+
+6. Run: START.bat
+
+7. Done!
+
+Common alternative ports:
+- 5433 (PostgreSQL default alternative)
+- 5434
+- 15432
+- 54320
+
+═══════════════════════════════════════════════════════════════
+
+OPTION B: USE EXISTING POSTGRESQL (EASIEST IF ALREADY INSTALLED)
+-----------------------------------------------------------------
+
+Best if: You already have PostgreSQL installed and working
+
+Steps:
+
+1. Double-click: USE_EXISTING_POSTGRES.bat
+
+2. Enter your existing PostgreSQL details:
+   - Port (usually 5432)
+   - Password
+   - Username (usually 'postgres')
+
+3. The script will update Powerhouse configuration
+
+4. Create 'powerhouse' database (if it doesn't exist):
+   
+   Method 1 - Using pgAdmin:
+   a) Open pgAdmin 4
+   b) Right-click Databases → Create → Database
+   c) Name: powerhouse
+   d) Save
+
+   Method 2 - Using psql:
+   a) Open Command Prompt
+   b) Run: psql -U postgres
+   c) Enter: CREATE DATABASE powerhouse;
+   d) Enter: \q
+
+5. Run: SETUP_DATABASE.bat
+
+6. Run: START.bat
+
+7. Done!
+
+═══════════════════════════════════════════════════════════════
+
+OPTION C: STOP CONFLICTING SERVICE
+-----------------------------------
+
+Best if: You don't need the other database
+
+Steps:
+
+1. Double-click: CHECK_PORT_5432.bat
+   Note the service name using port 5432
+
+2. Stop the service:
+   
+   a) Press Windows + R
+   b) Type: services.msc
+   c) Press Enter
+   d) Find the service (e.g., "postgresql-x64-15")
+   e) Right-click → Stop
+
+3. (Optional) Disable auto-start:
+   Right-click → Properties → Startup type: Disabled
+
+4. Double-click: DATABASE_SETUP_WINDOWS.bat
+   Install PostgreSQL normally on port 5432
+
+5. Run: SETUP_DATABASE.bat
+
+6. Run: START.bat
+
+7. Done!
+
+═══════════════════════════════════════════════════════════════
+
+OPTION D: UNINSTALL CONFLICTING DATABASE
+-----------------------------------------
+
+Best if: You don't need the other database at all
+
+Steps:
+
+1. Backup any important data from the existing database!
+
+2. Uninstall the existing database:
+   a) Control Panel → Programs and Features
+   b) Find PostgreSQL (or other database)
+   c) Uninstall
+
+3. Restart your computer (recommended)
+
+4. Double-click: CHECK_PORT_5432.bat
+   Verify port 5432 is now free
+
+5. Double-click: DATABASE_SETUP_WINDOWS.bat
+   Install PostgreSQL normally
+
+6. Run: SETUP_DATABASE.bat
+
+7. Run: START.bat
+
+8. Done!
+
+═══════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+----------------
+
+Problem: "Port still in use after stopping service"
+Solution:
+  1. Restart your computer
+  2. Run CHECK_PORT_5432.bat again
+  3. If still in use, try CUSTOM_PORT_SETUP.bat
+
+Problem: "Can't find what's using port 5432"
+Solution:
+  1. Run CHECK_PORT_5432.bat - it shows process ID
+  2. Open Task Manager
+  3. Details tab → Find PID (Process ID)
+  4. Right-click → End task
+  5. Try again
+
+Problem: "PostgreSQL won't install on different port"
+Solution:
+  1. During installation, Advanced Options
+  2. Change port there
+  3. Or use CUSTOM_PORT_SETUP.bat after installation
+
+Problem: "SETUP_DATABASE.bat fails with port error"
+Solution:
+  1. Make sure PostgreSQL is running
+  2. Check .env file has correct port:
+     frontend\app\.env
+  3. DATABASE_URL should show correct port
+  4. Update manually if needed
+
+Problem: "Connection refused even with correct port"
+Solution:
+  1. Check PostgreSQL service is running (services.msc)
+  2. Check firewall isn't blocking the port
+  3. Try: telnet localhost [your_port]
+  4. If telnet fails, PostgreSQL isn't listening
+
+═══════════════════════════════════════════════════════════════
+
+MANUAL CONFIGURATION:
+---------------------
+
+If scripts don't work, manually update the configuration:
+
+1. Open: frontend\app\.env
+
+2. Find line: DATABASE_URL="postgresql://..."
+
+3. Change port from 5432 to your port:
+   DATABASE_URL="postgresql://default:default@localhost:YOUR_PORT/powerhouse?schema=public"
+
+4. Save file
+
+5. Run: SETUP_DATABASE.bat
+
+6. Run: START.bat
+
+Example for port 5433:
+DATABASE_URL="postgresql://default:default@localhost:5433/powerhouse?schema=public"
+
+═══════════════════════════════════════════════════════════════
+
+VERIFICATION:
+-------------
+
+After setup, verify everything works:
+
+1. Check PostgreSQL is running:
+   netstat -an | find ":YOUR_PORT"
+   Should show LISTENING
+
+2. Check .env file:
+   type frontend\app\.env | find "DATABASE_URL"
+   Should show your port
+
+3. Test connection:
+   psql -U default -d powerhouse -h localhost -p YOUR_PORT
+   Should connect successfully
+
+4. Run START.bat:
+   Should start without errors
+
+5. Login to platform:
+   Should work without Prisma errors
+
+═══════════════════════════════════════════════════════════════
+
+WHICH SOLUTION SHOULD I CHOOSE?
+--------------------------------
+
+Choose OPTION A (Different Port) if:
+✓ You need to keep the existing database
+✓ You're not sure what's using port 5432
+✓ You want the safest, easiest solution
+✓ You don't want to change anything else
+
+Choose OPTION B (Existing PostgreSQL) if:
+✓ You already have PostgreSQL installed
+✓ You know the password
+✓ You're comfortable creating databases
+✓ You want to use your existing installation
+
+Choose OPTION C (Stop Service) if:
+✓ You know what's using port 5432
+✓ You don't need that service running
+✓ You want to use the default port 5432
+✓ You're comfortable with Windows services
+
+Choose OPTION D (Uninstall) if:
+✓ You don't need the existing database at all
+✓ You want a clean installation
+✓ You're sure there's no important data
+✓ You want to start fresh
+
+═══════════════════════════════════════════════════════════════
+
+RECOMMENDED: OPTION A (Different Port)
+--------------------------------------
+
+For most users, using a different port is:
+- Safest (doesn't affect existing installations)
+- Easiest (just one script to run)
+- Fastest (no need to stop/uninstall anything)
+- Most compatible (both databases can run)
+
+Just run: PORT_5432_CONFLICT_FIX.bat
+Or: CUSTOM_PORT_SETUP.bat
+
+═══════════════════════════════════════════════════════════════
+
+SCRIPTS SUMMARY:
+----------------
+
+CHECK_PORT_5432.bat
+→ Shows what's using port 5432
+→ Recommends solutions
+→ Run this FIRST
+
+PORT_5432_CONFLICT_FIX.bat
+→ Configures Powerhouse for port 5433
+→ Quick fix, uses default alternative port
+→ EASIEST solution
+
+CUSTOM_PORT_SETUP.bat
+→ Let you choose any available port
+→ Interactive, checks port availability
+→ Most flexible
+
+USE_EXISTING_POSTGRES.bat
+→ Configure to use your existing PostgreSQL
+→ For users who already have PostgreSQL
+→ No new installation needed
+
+DATABASE_SETUP_WINDOWS.bat
+→ Original PostgreSQL installation guide
+→ Use after resolving port conflict
+
+SETUP_DATABASE.bat
+→ Creates database tables
+→ Generates Prisma client
+→ Run AFTER PostgreSQL is ready
+
+START.bat
+→ Launches Powerhouse
+→ Use after everything is set up
+
+═══════════════════════════════════════════════════════════════
+
+COMMON PORTS REFERENCE:
+-----------------------
+
+5432  - PostgreSQL default
+5433  - PostgreSQL alternative (recommended)
+3306  - MySQL default
+27017 - MongoDB default
+1433  - Microsoft SQL Server
+3050  - Firebird
+
+If you see any of these in use, now you know what they are!
+
+═══════════════════════════════════════════════════════════════
+
+NEED MORE HELP?
+---------------
+
+1. Run CHECK_PORT_5432.bat first
+2. Follow the solution it recommends
+3. See WINDOWS_DATABASE_GUIDE.txt for general database help
+4. See README_WINDOWS.txt for overall installation guide
+
+═══════════════════════════════════════════════════════════════

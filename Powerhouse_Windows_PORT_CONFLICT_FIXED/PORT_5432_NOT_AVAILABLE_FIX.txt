@@ -1,0 +1,83 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║     PORT 5432 NOT AVAILABLE - QUICK FIX                      ║
+╚══════════════════════════════════════════════════════════════╝
+
+YOUR SITUATION:
+---------------
+Port 5432 is already in use. You need PostgreSQL for Powerhouse.
+
+═══════════════════════════════════════════════════════════════
+
+FASTEST FIX (2 SIMPLE STEPS):
+------------------------------
+
+STEP 1: Configure Alternative Port
+------------------------------------
+Double-click: PORT_5432_CONFLICT_FIX.bat
+
+This will:
+- Guide you to install PostgreSQL on port 5433
+- Update Powerhouse configuration automatically
+- Show you the download link
+
+STEP 2: Complete Setup
+------------------------------------
+After PostgreSQL is installed:
+1. Double-click: SETUP_DATABASE.bat
+2. Double-click: START.bat
+3. Done!
+
+═══════════════════════════════════════════════════════════════
+
+ALTERNATIVE: Use Your Existing PostgreSQL
+------------------------------------------
+
+If you already have PostgreSQL installed:
+
+1. Double-click: USE_EXISTING_POSTGRES.bat
+2. Enter your existing PostgreSQL details:
+   - Port (check your existing installation)
+   - Password
+   - Username
+3. Create 'powerhouse' database (if needed)
+4. Run: SETUP_DATABASE.bat
+5. Run: START.bat
+6. Done!
+
+═══════════════════════════════════════════════════════════════
+
+NEED MORE OPTIONS?
+------------------
+
+CHECK_PORT_5432.bat
+→ See what's using port 5432
+
+CUSTOM_PORT_SETUP.bat
+→ Choose your own custom port
+
+PORT_CONFLICT_GUIDE.txt
+→ Complete guide with all solutions
+
+═══════════════════════════════════════════════════════════════
+
+SUMMARY:
+--------
+
+Problem: Port 5432 in use
+Solution: Use port 5433 instead
+Script: PORT_5432_CONFLICT_FIX.bat
+Result: Works perfectly!
+
+═══════════════════════════════════════════════════════════════
+
+QUICK INSTALL SEQUENCE:
+------------------------
+
+1. INSTALL.bat ............... (already done)
+2. PORT_5432_CONFLICT_FIX.bat  (fixes port issue)
+3. [Install PostgreSQL on port 5433]
+4. SETUP_DATABASE.bat ........ (creates tables)
+5. START.bat ................. (launch!)
+
+═══════════════════════════════════════════════════════════════

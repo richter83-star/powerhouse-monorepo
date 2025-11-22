@@ -1,0 +1,14 @@
+
+# POWERHOUSE Backend Requirements
+flask==3.0.0
+flask-cors==4.0.0
+pyjwt==2.8.0
+cryptography==41.0.7
+jsonschema==4.20.0
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.23
+python-dotenv==1.0.0
+requests==2.31.0
+python3-saml==1.15.0
+redis==5.0.1
+celery==5.3.4
