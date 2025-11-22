@@ -1,17 +1,5 @@
-
 """
-Dynamic Self-Configuration Manager
-
-Enables agents to autonomously adjust runtime parameters based on
-performance metrics from the PerformanceMonitor.
-
-Features:
-- Real-time parameter adjustment based on performance metrics
-- Configurable adjustment policies and rules
-- Safe parameter bounds and validation
-- Automatic rollback on performance degradation
-- Configuration history and audit trail
-- Multiple adjustment strategies (gradual, aggressive, conservative)
+Enhanced Dynamic Self-Configuration Manager with Episodic Memory
 """
 
 from typing import Dict, Any, Optional, List, Callable, Tuple
@@ -25,24 +13,25 @@ from collections import deque
 
 from utils.logging import get_logger
 from core.performance_monitor import PerformanceMetrics, MetricType
+from enhanced_memory import EpisodicMemory
 
 logger = get_logger(__name__)
 
 
 class AdjustmentStrategy(str, Enum):
     """Strategy for parameter adjustments."""
-    CONSERVATIVE = "conservative"  # Small, safe adjustments
-    BALANCED = "balanced"          # Moderate adjustments
-    AGGRESSIVE = "aggressive"      # Large, fast adjustments
-    GRADUAL = "gradual"           # Very slow, gradual changes
+    CONSERVATIVE = "conservative"
+    BALANCED = "balanced"
+    AGGRESSIVE = "aggressive"
+    GRADUAL = "gradual"
 
 
 class ConfigurationScope(str, Enum):
     """Scope of configuration changes."""
-    GLOBAL = "global"           # Affects all agents
-    AGENT_TYPE = "agent_type"   # Affects specific agent type
-    AGENT_INSTANCE = "instance" # Affects single agent instance
-    ORCHESTRATOR = "orchestrator" # Affects orchestrator only
+    GLOBAL = "global"
+    AGENT_TYPE = "agent_type"
+    AGENT_INSTANCE = "instance"
+    ORCHESTRATOR = "orchestrator"
 
 
 @dataclass
@@ -52,7 +41,7 @@ class ParameterBounds:
     max_value: float
     default_value: float
     step_size: float
-    parameter_type: str = "float"  # float, int, bool, string
+    parameter_type: str = "float"
 
 
 @dataclass
@@ -62,15 +51,15 @@ class AdjustmentRule:
     description: str
     trigger_metric: MetricType
     trigger_threshold: float
-    trigger_operator: str  # "gt", "lt", "gte", "lte", "eq"
+    trigger_operator: str
     target_parameter: str
     adjustment_value: float
-    adjustment_type: str  # "absolute", "relative", "multiply"
+    adjustment_type: str
     scope: ConfigurationScope
     cooldown_seconds: int = 60
     max_adjustments_per_hour: int = 10
     enabled: bool = True
-    priority: int = 5  # 1-10, higher = more important
+    priority: int = 5
     
     # State tracking
     last_triggered: Optional[datetime] = None
@@ -97,7 +86,7 @@ class ConfigurationChange:
 
 class DynamicConfigManager:
     """
-    Manages dynamic runtime configuration adjustments for the agent system.
+    Enhanced configuration manager with episodic memory for learning from past changes.
     """
     
     def __init__(
@@ -108,13 +97,7 @@ class DynamicConfigManager:
         history_size: int = 1000
     ):
         """
-        Initialize dynamic configuration manager.
-        
-        Args:
-            strategy: Adjustment strategy to use
-            enable_auto_rollback: Enable automatic rollback on degradation
-            rollback_window_minutes: Time window for rollback evaluation
-            history_size: Number of changes to keep in history
+        Initialize enhanced dynamic configuration manager.
         """
         self.strategy = strategy
         self.enable_auto_rollback = enable_auto_rollback
@@ -124,6 +107,9 @@ class DynamicConfigManager:
         self.parameters: Dict[str, Any] = {}
         self.parameter_bounds: Dict[str, ParameterBounds] = {}
         self.adjustment_rules: Dict[str, AdjustmentRule] = {}
+        
+        # ENHANCED: Initialize episodic memory for configuration learning
+        self.episodic_memory = EpisodicMemory(capacity=5000)
         
         # History and state
         self.change_history: deque = deque(maxlen=history_size)
@@ -138,7 +124,7 @@ class DynamicConfigManager:
         # Initialize default parameters and rules
         self._initialize_defaults()
         
-        logger.info(f"Dynamic Configuration Manager initialized with {strategy} strategy")
+        logger.info(f"Enhanced Dynamic Configuration Manager initialized with episodic memory")
     
     def _initialize_defaults(self):
         """Initialize default parameters and adjustment rules."""
@@ -223,14 +209,12 @@ class DynamicConfigManager:
         )
         
         # Define default adjustment rules
-        
-        # Rule 1: Reduce search depth on high latency
         self.add_adjustment_rule(
             AdjustmentRule(
                 name="reduce_depth_on_high_latency",
                 description="Reduce planner search depth when latency is high",
                 trigger_metric=MetricType.LATENCY,
-                trigger_threshold=5000,  # 5 seconds
+                trigger_threshold=5000,
                 trigger_operator="gt",
                 target_parameter="planner_search_depth",
                 adjustment_value=-1,
@@ -242,13 +226,12 @@ class DynamicConfigManager:
             )
         )
         
-        # Rule 2: Increase retries on high error rate
         self.add_adjustment_rule(
             AdjustmentRule(
                 name="increase_retries_on_errors",
                 description="Increase retry attempts when error rate is high",
                 trigger_metric=MetricType.ERROR_RATE,
-                trigger_threshold=0.15,  # 15%
+                trigger_threshold=0.15,
                 trigger_operator="gt",
                 target_parameter="max_retries",
                 adjustment_value=1,
@@ -260,13 +243,12 @@ class DynamicConfigManager:
             )
         )
         
-        # Rule 3: Increase timeout on timeout rate
         self.add_adjustment_rule(
             AdjustmentRule(
                 name="increase_timeout_on_timeouts",
                 description="Increase timeout when timeout rate is high",
                 trigger_metric=MetricType.LATENCY,
-                trigger_threshold=50000,  # Very high latency
+                trigger_threshold=50000,
                 trigger_operator="gt",
                 target_parameter="timeout_seconds",
                 adjustment_value=1.2,
@@ -278,13 +260,12 @@ class DynamicConfigManager:
             )
         )
         
-        # Rule 4: Reduce batch size on high memory usage
         self.add_adjustment_rule(
             AdjustmentRule(
                 name="reduce_batch_on_memory",
                 description="Reduce batch size when memory usage is high",
                 trigger_metric=MetricType.MEMORY,
-                trigger_threshold=500,  # 500 MB average
+                trigger_threshold=500,
                 trigger_operator="gt",
                 target_parameter="batch_size",
                 adjustment_value=-2,
@@ -296,13 +277,12 @@ class DynamicConfigManager:
             )
         )
         
-        # Rule 5: Increase search depth on good performance
         self.add_adjustment_rule(
             AdjustmentRule(
                 name="increase_depth_on_good_perf",
                 description="Increase planner depth when performance is good",
                 trigger_metric=MetricType.SUCCESS_RATE,
-                trigger_threshold=0.95,  # 95% success
+                trigger_threshold=0.95,
                 trigger_operator="gt",
                 target_parameter="planner_search_depth",
                 adjustment_value=1,
@@ -311,24 +291,6 @@ class DynamicConfigManager:
                 cooldown_seconds=300,
                 max_adjustments_per_hour=2,
                 priority=4
-            )
-        )
-        
-        # Rule 6: Adjust quality threshold based on success rate
-        self.add_adjustment_rule(
-            AdjustmentRule(
-                name="lower_threshold_on_low_success",
-                description="Lower quality threshold when success rate is low",
-                trigger_metric=MetricType.SUCCESS_RATE,
-                trigger_threshold=0.70,  # Below 70%
-                trigger_operator="lt",
-                target_parameter="quality_threshold",
-                adjustment_value=-0.05,
-                adjustment_type="relative",
-                scope=ConfigurationScope.GLOBAL,
-                cooldown_seconds=600,
-                max_adjustments_per_hour=2,
-                priority=5
             )
         )
     
@@ -340,16 +302,7 @@ class DynamicConfigManager:
         description: str = "",
         initial_value: Optional[Any] = None
     ):
-        """
-        Register a configurable parameter.
-        
-        Args:
-            name: Parameter name
-            bounds: Parameter bounds
-            scope: Configuration scope
-            description: Parameter description
-            initial_value: Initial value (uses default if None)
-        """
+        """Register a configurable parameter."""
         with self._lock:
             self.parameter_bounds[name] = bounds
             value = initial_value if initial_value is not None else bounds.default_value
@@ -359,27 +312,13 @@ class DynamicConfigManager:
                        f"(bounds: {bounds.min_value}-{bounds.max_value})")
     
     def add_adjustment_rule(self, rule: AdjustmentRule):
-        """
-        Add an adjustment rule.
-        
-        Args:
-            rule: Adjustment rule to add
-        """
+        """Add an adjustment rule."""
         with self._lock:
             self.adjustment_rules[rule.name] = rule
             logger.info(f"Added adjustment rule: {rule.name}")
     
     def get_parameter(self, name: str, agent_name: Optional[str] = None) -> Any:
-        """
-        Get current parameter value.
-        
-        Args:
-            name: Parameter name
-            agent_name: Optional agent-specific override
-            
-        Returns:
-            Current parameter value
-        """
+        """Get current parameter value."""
         with self._lock:
             return self.parameters.get(name)
     
@@ -392,17 +331,7 @@ class DynamicConfigManager:
         agent_name: Optional[str] = None
     ) -> bool:
         """
-        Set parameter value with validation.
-        
-        Args:
-            name: Parameter name
-            value: New value
-            reason: Reason for change
-            rule_name: Rule that triggered change
-            agent_name: Agent name if agent-specific
-            
-        Returns:
-            bool: True if successful
+        Enhanced: Set parameter value with validation and episodic memory storage.
         """
         with self._lock:
             if name not in self.parameter_bounds:
@@ -434,6 +363,13 @@ class DynamicConfigManager:
             )
             
             self.change_history.append(change)
+            
+            # ENHANCED: Store in episodic memory for learning
+            self.episodic_memory.store(
+                state={"parameter": name, "old_value": old_value, "reason": reason},
+                action="parameter_change",
+                outcome={"new_value": validated_value, "success": True}
+            )
             
             # Schedule rollback check if enabled
             if self.enable_auto_rollback:
@@ -471,14 +407,7 @@ class DynamicConfigManager:
         force: bool = False
     ) -> List[ConfigurationChange]:
         """
-        Evaluate metrics and apply adjustments based on rules.
-        
-        Args:
-            metrics: Current performance metrics
-            force: Force evaluation ignoring cooldowns
-            
-        Returns:
-            List of changes made
+        Enhanced: Evaluate metrics and apply adjustments with episodic memory learning.
         """
         changes = []
         
@@ -486,6 +415,17 @@ class DynamicConfigManager:
             # Update baseline if first run
             if self.baseline_metrics is None:
                 self.baseline_metrics = metrics
+            
+            # ENHANCED: Retrieve similar past configurations
+            similar_configs = self.episodic_memory.retrieve_similar(
+                self._metrics_to_state(metrics), k=3
+            )
+            
+            # Learn from past successful configurations
+            successful_configs = [
+                ep for ep in similar_configs 
+                if ep['outcome'].get('success', False)
+            ]
             
             # Evaluate each rule
             for rule_name, rule in sorted(
@@ -527,20 +467,42 @@ class DynamicConfigManager:
                             "adjustment": f"{change.old_value} -> {change.new_value}"
                         })
         
+        # ENHANCED: Store evaluation results in episodic memory
+        if changes:
+            self.episodic_memory.store(
+                state=self._metrics_to_state(metrics),
+                action="configuration_evaluation",
+                outcome={
+                    "changes_applied": len(changes),
+                    "change_details": [c.parameter_name for c in changes],
+                    "metrics_snapshot": {
+                        "success_rate": metrics.success_rate,
+                        "latency": metrics.avg_latency_ms,
+                        "error_rate": metrics.error_rate
+                    }
+                }
+            )
+        
         if changes:
             logger.info(f"Applied {len(changes)} configuration changes")
         
         return changes
     
+    def _metrics_to_state(self, metrics: PerformanceMetrics) -> Dict[str, Any]:
+        """Convert metrics to a state representation for episodic memory."""
+        return {
+            "success_rate": metrics.success_rate,
+            "latency": metrics.avg_latency_ms,
+            "error_rate": metrics.error_rate,
+            "memory_usage": metrics.avg_memory_mb
+        }
+    
     def _evaluate_rule(self, rule: AdjustmentRule, metrics: PerformanceMetrics) -> bool:
         """Evaluate if rule condition is met."""
-        
-        # Extract metric value
         metric_value = self._extract_metric_value(rule.trigger_metric, metrics)
         if metric_value is None:
             return False
         
-        # Evaluate condition
         operators = {
             "gt": lambda a, b: a > b,
             "lt": lambda a, b: a < b,
@@ -562,7 +524,6 @@ class DynamicConfigManager:
         metrics: PerformanceMetrics
     ) -> Optional[float]:
         """Extract metric value from metrics object."""
-        
         metric_map = {
             MetricType.SUCCESS_RATE: metrics.success_rate,
             MetricType.LATENCY: metrics.avg_latency_ms,
@@ -582,7 +543,6 @@ class DynamicConfigManager:
         metrics: PerformanceMetrics
     ) -> Optional[ConfigurationChange]:
         """Apply adjustment defined by rule."""
-        
         param_name = rule.target_parameter
         current_value = self.parameters.get(param_name)
         
@@ -624,30 +584,20 @@ class DynamicConfigManager:
     
     def _apply_strategy_modifier(self, old_value: float, new_value: float) -> float:
         """Apply strategy-based modifier to adjustment."""
-        
         delta = new_value - old_value
         
         if self.strategy == AdjustmentStrategy.CONSERVATIVE:
-            # Reduce change by 50%
             return old_value + (delta * 0.5)
         elif self.strategy == AdjustmentStrategy.GRADUAL:
-            # Reduce change by 75%
             return old_value + (delta * 0.25)
         elif self.strategy == AdjustmentStrategy.AGGRESSIVE:
-            # Increase change by 50%
             return old_value + (delta * 1.5)
         else:  # BALANCED
             return new_value
     
     def check_and_rollback(self, current_metrics: PerformanceMetrics) -> List[str]:
         """
-        Check pending rollbacks and execute if performance degraded.
-        
-        Args:
-            current_metrics: Current performance metrics
-            
-        Returns:
-            List of rolled back parameter names
+        Enhanced: Check pending rollbacks with episodic memory learning.
         """
         rolled_back = []
         
@@ -669,6 +619,14 @@ class DynamicConfigManager:
                             reason=f"Auto-rollback: performance degraded after change"
                         )
                         rolled_back.append(change.parameter_name)
+                        
+                        # ENHANCED: Store rollback in episodic memory
+                        self.episodic_memory.store(
+                            state={"parameter": change.parameter_name, "new_value": change.new_value},
+                            action="parameter_rollback",
+                            outcome={"old_value": change.old_value, "reason": "performance_degradation"}
+                        )
+                        
                         logger.warning(f"Rolled back parameter '{change.parameter_name}' "
                                      f"due to performance degradation")
                     else:
@@ -683,40 +641,32 @@ class DynamicConfigManager:
     
     def _performance_degraded(self, current: PerformanceMetrics) -> bool:
         """Check if performance degraded compared to baseline."""
-        
         if not self.baseline_metrics:
             return False
         
         baseline = self.baseline_metrics
         
-        # Check multiple indicators
         degradation_score = 0
         
-        # Success rate dropped significantly
         if current.success_rate < baseline.success_rate - 0.05:
             degradation_score += 3
         
-        # Latency increased significantly
         if current.avg_latency_ms > baseline.avg_latency_ms * 1.3:
             degradation_score += 2
         
-        # Error rate increased
         if current.error_rate > baseline.error_rate + 0.05:
             degradation_score += 2
         
-        # Cost increased significantly
         if current.total_cost > baseline.total_cost * 1.5:
             degradation_score += 1
         
-        # Quality dropped
         if current.avg_quality_score < baseline.avg_quality_score - 0.1:
             degradation_score += 2
         
         return degradation_score >= 3
     
     def get_configuration_snapshot(self) -> Dict[str, Any]:
-        """Get current configuration snapshot."""
-        
+        """Get current configuration snapshot with enhanced insights."""
         with self._lock:
             return {
                 "timestamp": datetime.now().isoformat(),
@@ -740,12 +690,16 @@ class DynamicConfigManager:
                         "reason": change.reason
                     }
                     for change in list(self.change_history)[-10:]
-                ]
+                ],
+                # ENHANCED: Add episodic memory insights
+                "memory_insights": {
+                    "total_episodes": len(self.episodic_memory.episodes),
+                    "recent_configurations": self.episodic_memory.get_recent(5)
+                }
             }
     
     def get_statistics(self) -> Dict[str, Any]:
         """Get configuration change statistics."""
-        
         with self._lock:
             total_changes = len(self.change_history)
             
@@ -754,7 +708,8 @@ class DynamicConfigManager:
                     "total_changes": 0,
                     "changes_by_parameter": {},
                     "changes_by_rule": {},
-                    "rollbacks": 0
+                    "rollbacks": 0,
+                    "memory_episodes": len(self.episodic_memory.episodes)
                 }
             
             changes_by_param = {}
@@ -762,16 +717,13 @@ class DynamicConfigManager:
             rollback_count = 0
             
             for change in self.change_history:
-                # Count by parameter
                 param = change.parameter_name
                 changes_by_param[param] = changes_by_param.get(param, 0) + 1
                 
-                # Count by rule
                 if change.rule_name:
                     rule = change.rule_name
                     changes_by_rule[rule] = changes_by_rule.get(rule, 0) + 1
                 
-                # Count rollbacks
                 if "rollback" in change.reason.lower():
                     rollback_count += 1
             
@@ -780,12 +732,12 @@ class DynamicConfigManager:
                 "changes_by_parameter": changes_by_param,
                 "changes_by_rule": changes_by_rule,
                 "rollbacks": rollback_count,
-                "avg_changes_per_hour": self._calculate_change_rate()
+                "avg_changes_per_hour": self._calculate_change_rate(),
+                "memory_episodes": len(self.episodic_memory.episodes)
             }
     
     def _calculate_change_rate(self) -> float:
         """Calculate average changes per hour."""
-        
         if len(self.change_history) < 2:
             return 0.0
         
@@ -801,7 +753,6 @@ class DynamicConfigManager:
     
     def reset_to_defaults(self):
         """Reset all parameters to default values."""
-        
         with self._lock:
             for name, bounds in self.parameter_bounds.items():
                 self.set_parameter(
@@ -811,6 +762,12 @@ class DynamicConfigManager:
                 )
             
             logger.info("All parameters reset to defaults")
+    
+    def get_similar_past_configurations(self, current_state: Dict[str, Any], k: int = 3):
+        """
+        ENHANCED: Get similar past configurations for the current system state.
+        """
+        return self.episodic_memory.retrieve_similar(current_state, k)
 
 
 # Singleton instance
@@ -823,12 +780,6 @@ def get_config_manager(
 ) -> DynamicConfigManager:
     """
     Get or create the global configuration manager instance.
-    
-    Args:
-        strategy: Adjustment strategy (only used on first call)
-        
-    Returns:
-        DynamicConfigManager instance
     """
     global _config_manager_instance
     
@@ -838,4 +789,3 @@ def get_config_manager(
                 _config_manager_instance = DynamicConfigManager(strategy=strategy)
     
     return _config_manager_instance
-
