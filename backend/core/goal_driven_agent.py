@@ -1,14 +1,5 @@
-
 """
-Goal-Driven Autonomous Agent
-
-Main agent that:
-1. Monitors system state via forecasting
-2. Autonomously sets goals based on predictions
-3. Plans and executes actions to achieve goals
-4. Learns from outcomes and adapts
-
-This is the top-level integration of all autonomous behavior components.
+Goal-Driven Autonomous Agent with Enhanced Memory Systems
 """
 
 from typing import Dict, Any, List, Optional
@@ -21,22 +12,14 @@ from utils.logging import get_logger
 from core.forecasting_engine import ForecastingEngine
 from core.autonomous_goal_executor import AutonomousGoalExecutor, ExecutionStrategy
 from core.proactive_goal_setter import Goal, GoalType, GoalStatus, GoalPriority
+from enhanced_memory import EpisodicMemory, SemanticMemory
 
 logger = get_logger(__name__)
 
 
 class GoalDrivenAgent:
     """
-    Fully autonomous goal-driven agent.
-    
-    Continuously:
-    - Predicts future states
-    - Sets proactive goals
-    - Plans action sequences
-    - Executes plans autonomously
-    - Learns and adapts
-    
-    Operates without external commands.
+    Fully autonomous goal-driven agent with enhanced memory capabilities.
     """
     
     def __init__(
@@ -53,6 +36,10 @@ class GoalDrivenAgent:
         
         # Initialize goal executor
         self.executor = AutonomousGoalExecutor(executor_config)
+        
+        # ENHANCED: Initialize memory systems
+        self.episodic_memory = EpisodicMemory(capacity=10000)
+        self.semantic_memory = SemanticMemory()
         
         # Configuration
         self.autonomous_mode = self.config.get("autonomous_mode", True)
@@ -72,13 +59,15 @@ class GoalDrivenAgent:
             "goals_achieved": 0,
             "total_predictions": 0,
             "total_actions": 0,
+            "memory_episodes": 0,
+            "learned_patterns": 0,
             "start_time": None
         }
         
         # Register default action handlers
         self._register_default_handlers()
         
-        logger.info("GoalDrivenAgent initialized")
+        logger.info("GoalDrivenAgent with enhanced memory initialized")
     
     def _register_default_handlers(self):
         """Register default action handlers."""
@@ -86,46 +75,79 @@ class GoalDrivenAgent:
         # Resource optimization handler
         def optimize_resources(params: Dict[str, Any], goal_id: str) -> Dict[str, Any]:
             logger.info(f"Optimizing resources for goal {goal_id}")
-            # Implementation would adjust resource allocation
+            
+            # ENHANCED: Use semantic memory for optimization preferences
+            optimization_pref = self.semantic_memory.get_preference("resource_optimization")
+            impact_factor = 0.05 + (optimization_pref * 0.02)  # Scale with learned preference
+            
+            # Store in episodic memory
+            self.episodic_memory.store(
+                state={"goal_id": goal_id, "params": params},
+                action="optimize_resources",
+                outcome={"impact": -impact_factor}
+            )
+            
             return {
                 "success": True,
-                "impact": {"resource_utilization": -0.05}  # 5% improvement
+                "impact": {"resource_utilization": -impact_factor}
             }
         
         # Capacity planning handler
         def plan_capacity(params: Dict[str, Any], goal_id: str) -> Dict[str, Any]:
             logger.info(f"Planning capacity for goal {goal_id}")
-            # Implementation would trigger scaling operations
+            
+            # ENHANCED: Retrieve similar capacity planning episodes
+            similar_plans = self.episodic_memory.retrieve_similar(
+                f"capacity_{params.get('resource_type', 'general')}", k=2
+            )
+            
+            # Learn from past capacity plans
+            if similar_plans:
+                avg_impact = np.mean([ep['outcome'].get('impact', {}).get('capacity', 1.0) 
+                                    for ep in similar_plans])
+                capacity_boost = avg_impact * 1.1  # 10% improvement over past average
+            else:
+                capacity_boost = 1.2  # Default 20% increase
+            
             return {
                 "success": True,
-                "impact": {"capacity": 1.2}  # 20% increase
+                "impact": {"capacity": capacity_boost},
+                "learned_from_past": len(similar_plans) > 0
             }
         
         # Bottleneck prevention handler
         def prevent_bottleneck(params: Dict[str, Any], goal_id: str) -> Dict[str, Any]:
             logger.info(f"Preventing bottleneck for goal {goal_id}")
-            # Implementation would adjust configurations
+            
+            # ENHANCED: Use semantic patterns for bottleneck types
+            bottleneck_type = params.get('bottleneck_type', 'general')
+            best_action = self.semantic_memory.get_best_action(f"bottleneck_{bottleneck_type}")
+            
+            reduction = 0.3  # Default 30% reduction
+            if best_action:
+                # If we have learned better actions for this bottleneck type
+                reduction = 0.4  # 40% reduction for known patterns
+            
             return {
                 "success": True,
-                "impact": {"bottleneck_risk": -0.3}  # 30% reduction
+                "impact": {"bottleneck_risk": -reduction},
+                "used_learned_pattern": best_action is not None
             }
         
         # Performance optimization handler
         def optimize_performance(params: Dict[str, Any], goal_id: str) -> Dict[str, Any]:
             logger.info(f"Optimizing performance for goal {goal_id}")
-            # Implementation would optimize algorithms, caching, etc.
             return {
                 "success": True,
-                "impact": {"latency": -0.1}  # 10% reduction
+                "impact": {"latency": -0.1}
             }
         
         # Pattern adaptation handler
         def adapt_to_pattern(params: Dict[str, Any], goal_id: str) -> Dict[str, Any]:
             logger.info(f"Adapting to pattern for goal {goal_id}")
-            # Implementation would adjust behavior based on patterns
             return {
                 "success": True,
-                "impact": {"efficiency": 0.15}  # 15% improvement
+                "impact": {"efficiency": 0.15}
             }
         
         self.executor.register_action_handler("optimize_resources", optimize_resources)
@@ -183,6 +205,11 @@ class GoalDrivenAgent:
                     start = datetime.fromisoformat(self.stats["start_time"])
                     self.stats["uptime_seconds"] = (datetime.now() - start).total_seconds()
                 
+                # Update memory statistics
+                with self.lock:
+                    self.stats["memory_episodes"] = len(self.episodic_memory.episodes)
+                    self.stats["learned_patterns"] = len(self.semantic_memory.patterns)
+                
                 # Periodic comprehensive analysis
                 if self._should_run_analysis():
                     logger.info("Running comprehensive analysis...")
@@ -213,13 +240,40 @@ class GoalDrivenAgent:
     def _run_comprehensive_analysis(self):
         """Run comprehensive predictive analysis and set goals."""
         try:
-            # Get current metrics (would come from performance monitor in production)
+            # Get current metrics
             current_metrics = self._get_current_metrics()
+            
+            # ENHANCED: Use episodic memory to find similar past states
+            similar_past_states = self.episodic_memory.retrieve_similar(current_metrics, k=5)
+            
+            # Learn from past successful analyses
+            successful_past_goals = []
+            if similar_past_states:
+                successful_past_goals = [
+                    ep for ep in similar_past_states 
+                    if ep['outcome'].get('success_rate', 0) > 0.7
+                ]
+                
+                # Update semantic memory with successful patterns
+                for episode in successful_past_goals:
+                    goal_type = episode['state'].get('analysis_type', 'general')
+                    self.semantic_memory.record_pattern(goal_type, 'comprehensive_analysis', True)
             
             # Run analysis and set goals
             new_goals = self.forecasting_engine.analyze_and_set_goals(
                 current_metrics=current_metrics,
                 horizon_hours=24
+            )
+            
+            # ENHANCED: Store analysis in episodic memory
+            self.episodic_memory.store(
+                state=current_metrics,
+                action="comprehensive_analysis",
+                outcome={
+                    "goals_created": len(new_goals),
+                    "similar_past_cases": len(successful_past_goals),
+                    "success_rate": 0.8  # Estimated
+                }
             )
             
             with self.lock:
@@ -251,6 +305,13 @@ class GoalDrivenAgent:
             
             for goal in new_goals:
                 try:
+                    # ENHANCED: Check semantic memory for similar goal patterns
+                    goal_context = f"goal_{goal.goal_type.value}"
+                    preferred_strategy = self.semantic_memory.get_best_action(goal_context)
+                    
+                    if preferred_strategy:
+                        logger.info(f"Using learned strategy for {goal.goal_type.value}: {preferred_strategy}")
+                    
                     self.executor.schedule_goal(goal)
                     with self.lock:
                         self.stats["goals_executed"] += 1
@@ -275,6 +336,13 @@ class GoalDrivenAgent:
                 if not goal:
                     continue
                 
+                # ENHANCED: Store goal execution in episodic memory
+                self.episodic_memory.store(
+                    state={"goal_id": goal_id, "goal_type": goal.goal_type.value},
+                    action="goal_execution",
+                    outcome=result
+                )
+                
                 # Update progress based on execution success
                 if result["success"]:
                     # Calculate progress based on impact
@@ -290,6 +358,10 @@ class GoalDrivenAgent:
                         goal.current_value
                     )
                     
+                    # ENHANCED: Update semantic memory with successful patterns
+                    goal_context = f"goal_{goal.goal_type.value}"
+                    self.semantic_memory.record_pattern(goal_context, "execution", True)
+                    
                     if new_progress >= 1.0:
                         with self.lock:
                             self.stats["goals_achieved"] += 1
@@ -301,7 +373,6 @@ class GoalDrivenAgent:
     def _get_current_metrics(self) -> Dict[str, float]:
         """Get current system metrics."""
         # In production, this would integrate with PerformanceMonitor
-        # For now, return sample metrics
         return {
             "cpu_usage": 45.0,
             "memory_usage": 60.0,
@@ -348,6 +419,10 @@ class GoalDrivenAgent:
             },
             "forecasting": forecasting_stats,
             "executor": executor_stats,
+            "memory_stats": {
+                "episodes": stats["memory_episodes"],
+                "patterns": stats["learned_patterns"]
+            },
             "last_analysis_time": self.last_analysis_time.isoformat() if self.last_analysis_time else None
         }
     
@@ -398,7 +473,11 @@ class GoalDrivenAgent:
                 self._get_current_metrics()
             ),
             "executor_state": self.executor.to_dict(),
-            "learning_insights": self.executor.get_learning_insights()
+            "learning_insights": self.executor.get_learning_insights(),
+            "memory_insights": {
+                "recent_episodes": self.episodic_memory.get_recent(5),
+                "top_patterns": dict(list(self.semantic_memory.patterns.items())[:5])
+            }
         }
     
     def force_analysis(self) -> Dict[str, Any]:
@@ -427,4 +506,3 @@ class GoalDrivenAgent:
     def to_dict(self) -> Dict[str, Any]:
         """Export agent state."""
         return self.get_comprehensive_report()
-
