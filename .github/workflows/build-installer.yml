@@ -1,0 +1,68 @@
+name: Build Powerhouse Installer
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Build backend exe
+        run: |
+          cd backend
+          pip install pyinstaller fastapi uvicorn "pydantic==1.10.*"
+          pyinstaller --onefile --name powerhouse-server runtime_pro.py
+
+      - name: Setup Tauri
+        run: |
+          npm create tauri-app@latest installer -- --template vanilla --force
+          cd installer
+          rm -r src/www
+          mkdir src/www
+          cp -r ../frontend/out/* src/www/
+          cp ../backend/dist/powerhouse-server.exe src-tauri/
+
+      - name: Create clean tauri.conf.json
+        run: |
+          cd installer/src-tauri
+          cat > tauri.conf.json <<'EOF'
+          {
+            "package": { "productName": "Powerhouse", "version": "1.0.0" },
+            "tauri": {
+              "allowlist": { "shell": { "open": true }, "process": { "relaunch": true } },
+              "bundle": { "active": true, "identifier": "ai.powerhouse", "targets": "all" },
+              "windows": [{ "title": "Powerhouse", "url": "index.html", "width": 1400, "height": 900 }]
+            }
+          }
+          EOF
+
+      - name: Build final exe
+        run: |
+          cd installer
+          npm install
+          npx tauri build
+
+      - name: Upload exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: Powerhouse.exe
+          path: installer/src-tauri/target/release/*.exe
