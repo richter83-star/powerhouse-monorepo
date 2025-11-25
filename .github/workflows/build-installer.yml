@@ -12,13 +12,11 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        with:
-          node-version: 20
+        with: { node-version: 20 }
 
       - name: Setup Python
         uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+        with: { python-version: '3.11' }
 
       - name: Build frontend
         run: |
@@ -29,22 +27,22 @@ jobs:
       - name: Build backend exe
         run: |
           cd backend
-          pip install pyinstaller fastapi uvicorn "pydantic==1.10.*"
+          pip install pyinstaller fastapi uvicorn
           pyinstaller --onefile --name powerhouse-server runtime_pro.py
 
       - name: Setup Tauri
         run: |
           npm create tauri-app@latest installer -- --template vanilla --force
           cd installer
-          rm -r src/www
-          mkdir src/www
-          cp -r ../frontend/out/* src/www/
-          cp ../backend/dist/powerhouse-server.exe src-tauri/
+          Remove-Item -Recurse -Force src\www
+          New-Item -ItemType Directory -Force src\www
+          Copy-Item -Recurse ..\frontend\out\* src\www\
+          Copy-Item ..\backend\dist\powerhouse-server.exe src-tauri\
 
-      - name: Create clean tauri.conf.json
+      - name: Create tauri.conf.json (Windows-native)
         run: |
-          cd installer/src-tauri
-          cat > tauri.conf.json <<'EOF'
+          cd installer\src-tauri
+          @"
           {
             "package": { "productName": "Powerhouse", "version": "1.0.0" },
             "tauri": {
@@ -53,7 +51,7 @@ jobs:
               "windows": [{ "title": "Powerhouse", "url": "index.html", "width": 1400, "height": 900 }]
             }
           }
-          EOF
+          "@ | Out-File -Encoding utf8 tauri.conf.json
 
       - name: Build final exe
         run: |
