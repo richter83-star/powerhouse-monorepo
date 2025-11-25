@@ -1,0 +1,69 @@
+name: Build Powerhouse Installer
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install frontend + build
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Build Python backend into single exe
+        run: |
+          pip install pyinstaller
+          cd backend
+          pyinstaller --onefile --name powerhouse-server main.py
+
+      - name: Create Tauri app
+        run: |
+          npm create tauri-app@latest powerhouse-installer -- --force
+          cd powerhouse-installer
+          Move-Item ../frontend/out src-tauri/www -Force
+          Copy-Item ../backend/dist/powerhouse-server.exe src-tauri/
+          # minimal tauri.conf.json will be added in next step
+
+      - name: Inject minimal tauri.conf.json
+        run: |
+          cd powerhouse-installer/src-tauri
+          @"
+{
+  "package": { "productName": "Powerhouse", "version": "1.0.0" },
+  "tauri": {
+    "allowlist": { "all": false, "shell": { "open": true }, "process": { "relaunch": true } },
+    "bundle": { "active": true, "identifier": "ai.powerhouse", "icon": ["icons/32x32.png"] },
+    "security": { "csp": null },
+    "windows": [{ "fullscreen": false, "resizable": true, "title": "Powerhouse", "url": "http://localhost:8000" }]
+  }
+}
+"@ | Out-File -Encoding utf8 tauri.conf.json
+
+      - name: Build final exe
+        run: |
+          cd powerhouse-installer
+          npm install @tauri-apps/cli
+          npx tauri build --bundles exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Powerhouse-v${{ github.sha }}.exe
+          path: powerhouse-installer/src-tauri/target/release/bundle/exe/*.exe
