@@ -18,10 +18,21 @@ jobs:
         uses: actions/setup-python@v5
         with: { python-version: '3.11' }
 
-      - name: Build frontend
+      name: Build frontend
+        shell: pwsh
         run: |
-          cd frontend
-          npm ci
+          if (-not (Test-Path '.\frontend\package.json')) {
+            Write-Host 'ERROR: frontend\package.json not found. Listing repo root to help debug:'
+            Get-ChildItem -Force | Format-Table -AutoSize
+            exit 1
+          }
+          Set-Location frontend
+          if (Test-Path 'package-lock.json' -or Test-Path 'npm-shrinkwrap.json') {
+            npm ci
+          } else {
+            Write-Host 'package-lock.json not found — running npm install instead of npm ci'
+            npm install
+          }
           npm run build
 
       - name: Build backend exe
@@ -64,3 +75,4 @@ jobs:
         with:
           name: Powerhouse.exe
           path: installer/src-tauri/target/release/*.exe
+
