@@ -1,35 +1,35 @@
 name: Build Powerhouse Installer
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-        - name: Setup Node.js
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Setup Python
         uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
+        with:
+          python-version: '3.11'
 
-      name: Build frontend
+      - name: Install Yarn and build frontend
         shell: pwsh
         run: |
-          if (-not (Test-Path '.\frontend\package.json')) {
-            Write-Host 'ERROR: frontend\package.json not found. Listing repo root to help debug:'
-            Get-ChildItem -Force | Format-Table -AutoSize
-            exit 1
-          }
-          Set-Location frontend
-          if (Test-Path 'package-lock.json' -or Test-Path 'npm-shrinkwrap.json') {
-            npm ci
-          } else {
-            Write-Host 'package-lock.json not found — running npm install instead of npm ci'
-            npm install
-          }
-          npm run build
+          Set-Location frontend/app
+          corepack enable
+          corepack prepare yarn@stable --activate
+          yarn set version stable
+          yarn install --immutable
+          yarn build
 
       - name: Build backend exe
         run: |
@@ -41,14 +41,14 @@ jobs:
         run: |
           npm create tauri-app@latest installer -- --template vanilla --force
           cd installer
-          Remove-Item -Recurse -Force src\www
-          New-Item -ItemType Directory -Force src\www
-          Copy-Item -Recurse ..\frontend\out\* src\www\
-          Copy-Item ..\backend\dist\powerhouse-server.exe src-tauri\
+          Remove-Item -Recurse -Force src/www
+          New-Item -ItemType Directory -Force src/www
+          Copy-Item -Recurse ../../frontend/app/out/* src/www/
+          Copy-Item ../backend/dist/powerhouse-server.exe src-tauri/
 
-      - name: Create tauri.conf.json (Windows-native)
+      - name: Create tauri.conf.json
         run: |
-          cd installer\src-tauri
+          cd installer/src-tauri
           @"
           {
             "package": { "productName": "Powerhouse", "version": "1.0.0" },
@@ -66,10 +66,8 @@ jobs:
           npm install
           npx tauri build
 
-      - name: Upload exe
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
           name: Powerhouse.exe
           path: installer/src-tauri/target/release/*.exe
-
-
