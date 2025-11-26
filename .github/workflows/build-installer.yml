@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Yarn and build frontend
+      - name: Install Yarn + generate Prisma client + build frontend
         shell: pwsh
         run: |
           Set-Location frontend/app
@@ -29,12 +29,13 @@ jobs:
           corepack prepare yarn@stable --activate
           yarn set version stable
           yarn install --immutable
+          npx prisma generate            # ← THIS LINE FIXES IT
           yarn build
 
       - name: Build backend exe
         run: |
           cd backend
-          pip install pyinstaller fastapi uvicorn
+          pip install pyinstaller fastapi uvicorn prisma
           pyinstaller --onefile --name powerhouse-server runtime_pro.py
 
       - name: Setup Tauri
