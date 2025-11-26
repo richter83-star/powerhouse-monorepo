@@ -78,3 +78,4 @@ jobs:
           name: Powerhouse.exe
           path: installer/src-tauri/target/release/*.exe
 
+
