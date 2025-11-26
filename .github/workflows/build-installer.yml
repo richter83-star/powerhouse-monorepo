@@ -29,7 +29,12 @@ jobs:
           corepack prepare yarn@stable --activate
           yarn set version stable
           yarn install --immutable
-          npx prisma generate            # ← THIS LINE FIXES IT
+          # Dummy .env for Prisma generate (sqlite fallback)
+          @"
+          DATABASE_URL="file:./dev.db"
+          PH_JWT_SECRET="dummy_secret_for_build"
+          "@ | Out-File -Encoding utf8 .env
+          npx prisma generate --schema=./prisma/schema.prisma
           yarn build
 
       - name: Build backend exe
@@ -72,3 +77,4 @@ jobs:
         with:
           name: Powerhouse.exe
           path: installer/src-tauri/target/release/*.exe
+
