@@ -67,6 +67,17 @@ PH_AUDIT_LOG_RETENTION_DAYS=365
 
 ## Installation
 
+### One-click Windows install
+
+For Windows users who want a simple, low-tech setup, run the click-to-install PowerShell script:
+
+1. Open the `windows-installer` folder.
+2. Right-click `Install-Powerhouse.ps1` and choose **Run with PowerShell**.
+3. Wait for the script to install prerequisites, dependencies, and environment files.
+4. Double-click `START.bat` (in the project root) to launch Powerhouse.
+
+If Winget is not installed, install the **App Installer** from the Microsoft Store first. See `windows-installer/README.md` for optional flags and details.
+
 ### Prerequisites
 - Python 3.10+
 - Node.js 18+
