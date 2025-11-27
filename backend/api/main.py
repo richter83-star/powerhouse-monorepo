@@ -199,11 +199,9 @@ app.add_middleware(
 # Security middleware (JWT validation, audit logging)
 try:
     from api.middleware import SecurityMiddleware, RateLimitMiddleware
-    # Note: SecurityMiddleware is commented out by default to not break existing functionality
-    # Uncomment when ready to enforce JWT authentication on all endpoints
-    # app.add_middleware(SecurityMiddleware)
+    app.add_middleware(SecurityMiddleware)
     app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
-    logger.info("Security middleware loaded (JWT auth disabled by default)")
+    logger.info("Security middleware loaded with JWT authentication enabled")
 except ImportError as e:
     logger.warning(f"Could not load security middleware: {e}")
 
