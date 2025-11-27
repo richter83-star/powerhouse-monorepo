@@ -4,6 +4,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
 
 function Write-Section {
     param([string]$Message)
@@ -74,6 +75,35 @@ function Ensure-CommandAvailable {
     }
 }
 
+function Ensure-Yarn {
+    Write-Host "Ensuring Yarn is available..." -ForegroundColor Yellow
+
+    if (Get-Command yarn -ErrorAction SilentlyContinue) {
+        Write-Host "Yarn already installed." -ForegroundColor Green
+        return
+    }
+
+    $corepackEnabled = $false
+    if (Get-Command corepack -ErrorAction SilentlyContinue) {
+        try {
+            corepack enable --install-directory "$env:LOCALAPPDATA\\Microsoft\\WindowsApps" | Out-Null
+            corepack prepare yarn@stable --activate | Out-Null
+            $corepackEnabled = $true
+            Write-Host "Yarn activated via Corepack." -ForegroundColor Green
+        } catch {
+            Write-Host "Corepack activation failed. Falling back to npm." -ForegroundColor Yellow
+        }
+    }
+
+    if (-not $corepackEnabled) {
+        npm install -g yarn --silent
+        Write-Host "Yarn installed globally via npm." -ForegroundColor Green
+    }
+
+    Refresh-EnvPath
+    Ensure-CommandAvailable -CommandName yarn -ResolutionHint "Close PowerShell and rerun the installer if Yarn was just installed."
+}
+
 $repoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
 Write-Host "Powerhouse Windows Installer" -ForegroundColor White -BackgroundColor DarkBlue
@@ -93,15 +123,7 @@ Ensure-CommandAvailable -CommandName git -ResolutionHint "Close PowerShell and r
 Ensure-CommandAvailable -CommandName node -ResolutionHint "Close PowerShell and rerun the installer if Node.js was just installed."
 Ensure-CommandAvailable -CommandName npm -ResolutionHint "Close PowerShell and rerun the installer if Node.js was just installed."
 
-Write-Host "Ensuring Yarn is available..." -ForegroundColor Yellow
-if (-not (Get-Command yarn -ErrorAction SilentlyContinue)) {
-    npm install -g yarn --silent
-    Refresh-EnvPath
-    Ensure-CommandAvailable -CommandName yarn -ResolutionHint "Close PowerShell and rerun the installer if Yarn was just installed."
-    Write-Host "Yarn installed globally." -ForegroundColor Green
-} else {
-    Write-Host "Yarn already installed." -ForegroundColor Green
-}
+Ensure-Yarn
 
 Write-Section "Backend dependencies"
 Push-Location (Join-Path $repoRoot 'backend')

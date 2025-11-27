@@ -12,7 +12,7 @@ This folder contains a single PowerShell script that sets up Powerhouse on Windo
    - Create the `.env` files with sensible defaults if they are missing.
 5. Double-click `START.bat` (in the project root) to launch Powerhouse.
 
-If you see messages like `python is not recognized` or `node is not recognized`, **close PowerShell**, reopen it, and rerun `Install-Powerhouse.ps1`. This refreshes your PATH after winget installs new tools.
+If you see messages like `python is not recognized` or `node is not recognized`, **close PowerShell**, reopen it, and rerun `Install-Powerhouse.ps1`. This refreshes your PATH after winget installs new tools. Yarn is enabled via Corepack when possible and falls back to a silent npm install if needed.
 
 ## Optional: auto-launch after install
 If you prefer the installer to start Powerhouse immediately, run it from PowerShell with:

@@ -76,7 +76,7 @@ For Windows users who want a simple, low-tech setup, run the click-to-install Po
 3. Wait for the script to install prerequisites, dependencies, and environment files.
 4. Double-click `START.bat` (in the project root) to launch Powerhouse.
 
-If PowerShell reports that `python`, `node`, or `yarn` is not recognized, close PowerShell, reopen it, and rerun the installer so Windows refreshes your PATH after new installs.
+If PowerShell reports that `python`, `node`, or `yarn` is not recognized, close PowerShell, reopen it, and rerun the installer so Windows refreshes your PATH after new installs. The installer enables Yarn via Corepack when available and falls back to npm if necessary.
 
 If Winget is not installed, install the **App Installer** from the Microsoft Store first. See `windows-installer/README.md` for optional flags and details.
 
