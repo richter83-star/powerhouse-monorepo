@@ -5,7 +5,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --pretty --noEmit",
+    "test": "npm run lint && npm run type-check"
   },
   "prisma": {
     "seed": "tsx --require dotenv/config scripts/seed.ts"
