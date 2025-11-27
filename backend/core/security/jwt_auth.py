@@ -9,10 +9,11 @@ from typing import Dict, Optional, Any
 from dataclasses import dataclass
 import hashlib
 
-# In production, load from environment variables
-JWT_SECRET_KEY = secrets.token_urlsafe(32)
-JWT_ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from config.settings import settings
+
+JWT_SECRET_KEY = settings.secret_key
+JWT_ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 @dataclass

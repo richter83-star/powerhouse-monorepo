@@ -1,8 +1,6 @@
 """
 Simple script to run the FastAPI server.
 """
-import sys
-sys.path.insert(0, '/home/ubuntu/powerhouse_b2b_platform/backend')
 
 if __name__ == "__main__":
     import uvicorn
